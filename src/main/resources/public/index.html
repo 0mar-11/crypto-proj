@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Toolkit Project</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f7f6;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            background-color: #fff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 600px;
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        label {
+            font-weight: bold;
+            margin-top: 15px;
+            display: block;
+        }
+        textarea, select, input {
+            width: 100%;
+            padding: 10px;
+            margin-top: 5px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+            font-family: monospace;
+        }
+        .form-row {
+            display: flex;
+            gap: 15px;
+        }
+        .form-group {
+            flex: 1;
+        }
+        button {
+            width: 100%;
+            background-color: #2980b9;
+            color: white;
+            padding: 12px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #3498db;
+        }
+        .output-section {
+            margin-top: 25px;
+            padding-top: 20px;
+            border-top: 2px solid #eee;
+        }
+        #outputText {
+            background-color: #e8f8f5;
+            border-color: #1abc9c;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Crypto Toolkit</h1>
+
+    <!-- The form starts here -->
+    <form id="cryptoForm">
+        
+        <label for="inputText">Input Message / Ciphertext:</label>
+        <textarea id="inputText" rows="4" placeholder="Enter text here..." required></textarea>
+
+        <div class="form-row">
+            <div class="form-group">
+                <label for="action">Action:</label>
+                <select id="action">
+                    <option value="encrypt">Encrypt</option>
+                    <option value="decrypt">Decrypt</option>
+                    <option value="encode">Encode</option>
+                    <option value="decode">Decode</option>
+                    <option value="hash">Hash</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="algorithm">Algorithm:</label>
+                <select id="algorithm">
+                    <optgroup label="Symmetric">
+                        <option value="AES">AES</option>
+                        <option value="DES">DES</option>
+                        <option value="3DES">3DES</option>
+                    </optgroup>
+                    <optgroup label="Asymmetric">
+                        <option value="RSA">RSA</option>
+                    </optgroup>
+                    <optgroup label="Encoding">
+                        <option value="Base64">Base64</option>
+                        <option value="Hex">Hex</option>
+                        <option value="URL">URL Encoding</option>
+                    </optgroup>
+                    <optgroup label="Hashing">
+                        <option value="SHA-256">SHA-256</option>
+                        <option value="SHA-512">SHA-512</option>
+                        <option value="SaltedHash">Salted Hashing</option>
+                    </optgroup>
+                </select>
+            </div>
+        </div>
+
+        <div class="form-row">
+            <!-- Updated Secret Key Group -->
+            <div class="form-group">
+                <label for="secretKey">Secret Key (Symmetric):</label>
+                <div style="display: flex; gap: 5px; margin-top: 5px;">
+                    <input type="text" id="secretKey" placeholder="Enter key (if applicable)" style="margin-top: 0;">
+                    <button type="button" id="generateKeyBtn" style="margin-top: 0; padding: 10px; width: auto; background-color: #27ae60;">Generate Key</button>
+                </div>
+            </div>
+            
+            <div class="form-group">
+                <label for="salt">Salt (Hashing):</label>
+                <input type="text" id="salt" placeholder="Enter salt (if applicable)">
+            </div>
+        </div>
+
+        <button type="submit">Execute Operation</button>
+    </form>
+
+    <!-- Output Section -->
+    <div class="output-section">
+        <label for="outputText">Output / Result:</label>
+        <textarea id="outputText" rows="4" readonly placeholder="Result will appear here..."></textarea>
+    </div>
+</div>
+
+<!-- JavaScript to communicate with your Java Backend -->
+<script>
+    document.getElementById('cryptoForm').addEventListener('submit', function(event) {
+        event.preventDefault(); // Prevent the page from reloading
+
+        // Gather all the data from the HTML form
+        const requestData = new URLSearchParams();
+        requestData.append("inputText", document.getElementById('inputText').value);
+        requestData.append("action", document.getElementById('action').value);
+        requestData.append("algorithm", document.getElementById('algorithm').value);
+        requestData.append("secretKey", document.getElementById('secretKey').value);
+        requestData.append("salt", document.getElementById('salt').value);
+
+        // Send the data to your Java backend at the "/api/process" endpoint
+        fetch('/api/process', {
+            method: 'POST',
+            body: requestData
+        })
+        .then(response => response.text()) // Get the text response from Java
+        .then(result => {
+            // Put the result into the output text area
+            document.getElementById('outputText').value = result;
+        })
+        .catch(error => {
+            document.getElementById('outputText').value = "Error communicating with Java backend: " + error;
+        });
+    });
+    // Logic for the Generate Key button
+document.getElementById('generateKeyBtn').addEventListener('click', function() {
+    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789!@#$%^&*';
+    let randomKey = '';
+    // Generate a secure-looking 16-character key
+    for (let i = 0; i < 16; i++) {
+        randomKey += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    document.getElementById('secretKey').value = randomKey;
+});
+</script>
+
+</body>
+</html>
